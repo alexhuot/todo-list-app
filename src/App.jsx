@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { CalendarIcon } from '@heroicons/react/24/outline';
 
-function App() {
-  const [tasks, setTasks] = useState([]);
+export default function App() {
+  // Load initial tasks from localStorage
+  const savedTasks = localStorage.getItem('tasks');
+  const initialTasks = savedTasks ? JSON.parse(savedTasks) : [];
+  
+  const [tasks, setTasks] = useState(initialTasks);
   const [newTask, setNewTask] = useState('');
+  const [newTaskDate, setNewTaskDate] = useState('');
   const [showAddTask, setShowAddTask] = useState(false);
+
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    try {
+      console.log('Saving tasks to localStorage:', tasks);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    } catch (error) {
+      console.error('Error saving tasks:', error);
+    }
+  }, [tasks]);
 
   const addTask = () => {
     if (newTask.trim()) {
-      setTasks([...tasks, { id: Date.now(), text: newTask, completed: false }]);
+      setTasks([...tasks, { 
+        id: Date.now(), 
+        text: newTask, 
+        completed: false,
+        dueDate: newTaskDate
+      }]);
       setNewTask('');
+      setNewTaskDate('');
       setShowAddTask(false);
     }
   };
@@ -77,6 +99,25 @@ function App() {
             }}
             placeholder="Enter your task"
           />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: '10px'
+          }}>
+            <CalendarIcon className="h-5 w-5 text-gray-400 mr-2" />
+            <input
+              type="date"
+              value={newTaskDate}
+              onChange={(e) => setNewTaskDate(e.target.value)}
+              style={{
+                flex: 1,
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '16px'
+              }}
+            />
+          </div>
           <button
             onClick={addTask}
             style={{
@@ -101,16 +142,13 @@ function App() {
           borderRadius: '8px',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '10px',
-                borderBottom: '1px solid #eee'
-              }}
-            >
+          {tasks.map(task => (
+            <div key={task.id} style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '10px 0',
+              borderBottom: '1px solid #eee'
+            }}>
               <input
                 type="checkbox"
                 checked={task.completed}
@@ -121,23 +159,34 @@ function App() {
                   height: '20px'
                 }}
               />
-              <span
-                style={{
-                  flex: 1,
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <span style={{
                   textDecoration: task.completed ? 'line-through' : 'none',
-                  color: task.completed ? '#888' : '#333'
-                }}
-              >
-                {task.text}
-              </span>
+                  marginRight: '10px'
+                }}>
+                  {task.text}
+                </span>
+                {task.dueDate && (
+                  <span style={{
+                    color: '#666',
+                    fontSize: '14px'
+                  }}>
+                    • {new Date(task.dueDate).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => deleteTask(task.id)}
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#dc3545',
+                  color: '#dc2626',
                   cursor: 'pointer',
-                  padding: '5px'
+                  padding: '5px 10px'
                 }}
               >
                 Delete
@@ -149,5 +198,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
